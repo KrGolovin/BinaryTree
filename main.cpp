@@ -1,7 +1,8 @@
 
 #include "BinarySearchTree.h"
 
-#include <iostream> using namespace std;
+#include <iostream>
+using namespace std;
 
 int main()
 {
@@ -17,7 +18,8 @@ int main()
     intTree.insert(5);
     intTree.insert(32);
     intTree.insert(22);
-    // Вывод узлов дерева в выходной поток  intTree.print(cout); // Поиск в дереве по ключу
+    // Вывод узлов дерева в выходной поток
+    intTree.print(cout); // Поиск в дереве по ключу
     int  keyFound = intTree.iterativeSearch(15); // поиск должен быть успешным
     cout << "Key " << 15 << (keyFound ? " found successfully" : " not found") << " in the tree" << endl;
     keyFound = intTree.iterativeSearch(23);      // поиск должен быть неудачным
