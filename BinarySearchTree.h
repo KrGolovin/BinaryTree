@@ -6,6 +6,7 @@
 #define BINARYTREE_BINARYSEARCHTREE_H
 #include <iostream>
 #include <algorithm>
+#include <stack>
 using namespace std;
 
 //
@@ -80,18 +81,27 @@ public:
                 }
             }
         }
-        throw "Just Is";
+        throw "Just is";
+    }
+    void insertReq(const T& key) {
+        if (root_ == nullptr) {
+            root_ = new Node(key, nullptr, nullptr, nullptr);
+            return;
+        }
+        insertR(root_, key);
     }
 // Удаление элемента из дерева, не нарушающее порядка элементов
     void deleteKey(const T& key)
     {
         Node* curr = iterativeSearchNode(key);
         if (curr == nullptr) {
-            throw "Just Not Is";
+            throw "Didn't find key";
         }
         if (curr->right_ == nullptr && curr->left_ == nullptr) { // оба потомка - пустые
             Node* parent = curr->p_;
-            if (parent->key_ < curr->key_) {
+            if (parent == nullptr) {
+                root_ = nullptr;
+            } else if (parent->key_ < curr->key_) {
                 parent->right_ = nullptr;
             } else {
                 parent->left_ = nullptr;
@@ -101,7 +111,10 @@ public:
             Node* child = nullptr;
             (curr->left_ != nullptr) ? child = curr->left_ : child = curr->right_;
             Node* parent = curr->p_;
-            if (parent->key_ < curr->key_) {
+            if (parent == nullptr) {
+                root_ = (curr->left_ != nullptr) ? curr->left_ : curr->right_;
+                root_->p_ = nullptr;
+            } else if (parent->key_ < curr->key_) {
                 parent->right_ = (curr->left_ != nullptr) ? curr->left_ : curr->right_;
                 child->p_ = parent;
             } else {
@@ -126,6 +139,9 @@ public:
         }
 
     }
+    void deleteKeyReq(const T& key) {
+        root_ = deleteKeyR(root_, key);
+    }
 // Определение количества узлов дерева
     int getCount() const
     {
@@ -140,6 +156,49 @@ public:
     bool isEmpty() const {
         return root_ == nullptr;
     }
+    int getCountEven() {
+        return getCountEvenReq(root_);
+    }
+    T getKey(int index) {
+        if (index < 0) {
+            throw "Out of bound";
+        }
+        int curr = -1;
+        T ans = getKeySubTree(root_, curr, index);
+        if (curr < index) {
+            throw "Out of bound";
+        } else {
+            return ans;
+        }
+
+    }
+    T getNext(T value) {
+        return getNext(root_, value);
+    }
+
+  void horizontalWalk()
+  {
+    stack<Node*> stack;
+    stack.push(root_);
+    Node* temp = root_;
+    Node* lastLeft = nullptr;
+    while (stack.size() != 0)
+    {
+      while (temp->left_)
+      {
+        temp = temp->left_;
+        stack.push(temp);
+      }
+      lastLeft = stack.top();
+      stack.pop();
+      std::cout << lastLeft->key_ << " ";
+      if (lastLeft->right_ != nullptr)
+      {
+        temp = lastLeft->right_;
+        stack.push(temp);
+      }
+    }
+  }
 private:
 
     // Функция поиска адреса узла по ключу в бинарном дереве поиска
@@ -162,7 +221,49 @@ private:
     // Рекурсивные функции, представляющие
     // рекурсивные тела основных интерфейсных методов
     //
+    void insertR(Node *node, const T& key) {
+        if (node->key_ == key) {
+            throw "Just is";
+        }
+        if (node->key_ > key) {
+            if (node->left_ == nullptr) {
+                node->left_ = new Node(key, nullptr, nullptr, node);
+            } else {
+                insertR(node->left_, key);
+            }
+        } else {
+            if (node->right_ == nullptr) {
+                node->right_ = new Node(key, nullptr, nullptr, node);
+            } else {
+                insertR(node->right_, key);
+            }
+        }
+    }
 
+    Node* deleteKeyR(Node* node, const T& key) {
+        if (node == nullptr) {
+            throw "Didn't find key";
+        }
+        if (node->key_ > key) {
+            node->left_ = deleteKeyR(node->left_, key);
+        } else  if (node->key_ < key) {
+            node->right_ = deleteKeyR(node->right_, key);
+        } else if (node->left_ != nullptr && node->right_ != nullptr) {
+            node->key_ = getMin(node->right_)->key_;
+            node->right_ = deleteKeyR(node->right_, node->key_);
+        } else {
+            if (node->left_ != nullptr) {
+                node = node->left_;
+            } else if (node->right_ != nullptr) {
+                node = node->right_;
+            } else {
+                Node* tmp = node;
+                delete(tmp);
+                node = nullptr;
+            }
+        }
+        return node;
+    }
     // Рекурсивная функция для освобождения памяти
     void deleteSubtree(Node* node)
     {
@@ -181,6 +282,15 @@ private:
             return 0;
         return (1 + getCountSubTree(node->left_) + getCountSubTree(node->right_));
     }
+
+    int getCountEvenReq(Node* node) const
+    {
+        if (node == nullptr) {
+            return 0;
+        }
+        return (((node->key_ + 1) % 2) + getCountEvenReq(node->left_) + getCountEvenReq(node->right_));
+    }
+
 
     // Рекурсивная функция определения высоты дерева
     int getHeightSubTree(Node* node) const
@@ -234,14 +344,67 @@ private:
         if (isEmpty()) {
             return nullptr;
         }
-        Node* curr = root_;
+        Node* curr = node;
         while (curr->left_ != nullptr){
             curr = curr->left_;
         }
         return curr;
     }
+    Node* getMax(Node* node) const {
+        if (isEmpty()) {
+            return nullptr;
+        }
+        Node* curr = node;
+        while (curr->right_ != nullptr){
+            curr = curr->right_;
+        }
+        return curr;
+    }
 
-
+    T getKeySubTree(Node *node, int & curr, int value) {
+        if (node->left_ != nullptr) {
+            T leftValue = 0;
+            leftValue = getKeySubTree(node->left_, curr, value);
+            if (curr >= value) {
+                return leftValue;
+            }
+        }
+        curr++;
+        if (curr == value) {
+            return node->key_;
+        }
+        if (node->right_ != nullptr) {
+            return getKeySubTree(node->right_, curr, value);
+        }
+        return node->key_;
+    }
+    T getNext(Node* node, int value) {
+        if (node == nullptr) {
+            throw "Non";
+        }
+        if (node->key_ > value) {
+            if (node->left_ == nullptr) {
+                return node->key_;
+            }
+            if (node->left_->key_ > value) {
+                return getNext(node->left_, value);
+            }
+            if (node->left_->key_ <= value) {
+                try {
+                    T tmp = getNext(node->left_, value);
+                    if (tmp > value) {
+                        return tmp;
+                    } else {
+                        return node->key_;
+                    }
+                } catch (const char * e) {
+                    return node->key_;
+                }
+            }
+        } else {
+            return getNext(node->right_, value);
+        }
+    }
 
 }; // конец шаблона класса TreeBinarySearchTree
 
